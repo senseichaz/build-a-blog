@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<a href="/newpost"> New post</a>
+
+<ul>
+{% for blogentry in five_recent %}
+    <li>
+        <h1> {{ blogentry.subject }} </h1>
+
+        <p> {{ blogentry.content }} </p>
+
+
+    </li>
+{% endfor %}
+</ul>
+
+
+{% endblock %}
