@@ -4,12 +4,15 @@
 
 <a href="/newpost"> New post</a>
 
-<ul>
-{% for blogentry in five_recent %}
-    <li>
-        <h1> {{ blogentry.subject }} </h1>
 
-        <p> {{ blogentry.content }} </p>
+
+<ul>
+{% for p in five_recent %}
+
+    <li>
+        <a href="/{{p.key().id()}}"> {{ p.subject }} </a>
+
+        <p> {{ p.content }} </p>
 
 
     </li>

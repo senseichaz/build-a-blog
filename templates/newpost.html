@@ -5,13 +5,14 @@
 
 <form action="/view" method="post">
   <label>
-    <input type="text" name="subject"/>
+    <input type="text" name="subject" value ="{{subject}}"/>
   </label>
   <br> <br>
   <label>
-    <input type="text" name="new-post-content"/>
+    <input type="text" name="content" value = "{{content}}"/>
   </label>
-  <input type="submit" value="Make a new post"/>
+  <input type="submit" value="Make a new post"/> <br> <br>
+  <font color="red"> {{error}} </font>
 </form>
 
 {% endblock %}

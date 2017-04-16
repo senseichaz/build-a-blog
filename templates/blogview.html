@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2> <strong> {{blogentry.subject}} </strong> <h2>
 
-<p> {{ blogentry.content }} </p>
+<h2> <strong> {{ p.subject}} </strong> </h2>
+
+ {{ p.content }}
+
 
 {% endblock %}

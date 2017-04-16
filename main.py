@@ -25,9 +25,10 @@ from google.appengine.ext import db
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir))
 
+# def blog_key(name = 'default'):
+#     return db.Key.from_path('blogs', name)
 
-
-class BlogEntries(db.Model):
+class Post(db.Model):
     subject = db.TextProperty(required = False)
     content = db.TextProperty(required = False)
     created = db.DateTimeProperty(auto_now_add = True)
@@ -44,12 +45,51 @@ class MainHandler(webapp2.RequestHandler):
         self.error(error_code)
         self.response.write("Oops! Something went wrong.")
 
-# class ViewPostHandler(webapp2.RequestHandler):
-#     """ creates unique IDs """
-#     def get(self,id):
-#         id_RE = re.compile(id)
-#         self.response.write(id_RE)
+class ViewPostHandler(webapp2.RequestHandler):
+    def get(self, id):
 
+        key = db.Key.from_path('Post', int(id))
+
+        p = db.get(key)
+
+        t = jinja_env.get_template("blogview.html")
+        content = t.render(p=p)
+        self.response.write(content)
+
+    def post(self):
+        subject = self.request.get('subject')
+        content = self.request.get('content')
+
+        if subject and content:
+            p = Post(subject = subject, content = content)
+            p.put()
+            self.redirect('/%s' % str(p.key().id()))
+        else:
+            error = "subject and content, please!"
+            t = jinja_env.get_template("newpost.html")
+            newpost = t.render(subject=subject, content=content, error= error)
+            self.response.write(newpost)
+
+class NewPost(MainHandler):
+    """ write new post
+    """
+    def get(self):
+        t = jinja_env.get_template("newpost.html")
+        content = t.render()
+        self.response.write(content)
+
+    def post(self):
+
+        subject = self.request.get('subject')
+        content = self.request.get('content')
+
+        if subject and content:
+            p = Post(subject = subject, content = content)
+            p.put()
+            self.redirect('/%s' % str(p.key().id()))
+        # else:
+        #     error = "subject and content, please!"
+        #     self.render("newpost.html", subject=subject, content=content, error=error)
 
 class Index(MainHandler):
     """ Handles requests coming in to '/' (the root of our site)
@@ -57,47 +97,35 @@ class Index(MainHandler):
 
     def get(self):
         # pull 5 most recent posts
-        last5 = db.GqlQuery("SELECT * FROM BlogEntries ORDER BY created DESC LIMIT 5 ")
-        #last5 = (['ayo', 'yayo'], ['post1', 'post1'], ['post2', 'post2'], ['post3', 'post3'], ['post4', 'post4'])
+        last5 = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 5 ")
 
         t = jinja_env.get_template("frontpage.html")
         content = t.render(five_recent = last5)
         self.response.write(content)
 
-class NewPost(MainHandler):
-    """ write new post
-    """
-    def get(self):
-        #unwatched_movies = db.GqlQuery("SELECT * FROM Movie where watched = False")
-        t = jinja_env.get_template("newpost.html")
-        content = t.render()
-        self.response.write(content)
+# class ViewPost(MainHandler):
+#     """ view post
+#     """
+#     def post(self):
+#         new_post_content = self.request.get("content")
+#         new_post_content_esc = cgi.escape(new_post_content, quote=True)
+#
+#         new_post_subject = self.request.get("subject")
+#         new_post_subject_esc = cgi.escape(new_post_subject, quote=True)
+#
+#         # construct a blog object for the new entry
+#         p = Post(subject = new_post_subject_esc, content = new_post_content_esc)
+#         #blogentry = Post(subject = new_post_subject_esc)
+#         p.put()
+#
+#         t = jinja_env.get_template("blogview.html")
+#         content = t.render(p=p)
+#         self.response.write(content)
 
-class ViewPost(MainHandler):
-    """ view post
-    """
-    def post(self):
-        new_post_content = self.request.get("new-post-content")
-        new_post_content_esc = cgi.escape(new_post_content, quote=True)
-
-        new_post_subject = self.request.get("subject")
-        new_post_subject_esc = cgi.escape(new_post_subject, quote=True)
-
-        # construct a blog object for the new entry
-        blogentry = BlogEntries(subject = new_post_subject_esc, content = new_post_content_esc)
-        #blogentry = BlogEntries(subject = new_post_subject_esc)
-        blogentry.put()
-
-        t = jinja_env.get_template("blogview.html")
-        content = t.render(blogentry = blogentry)
-        self.response.write(content)
-
-
-# webapp2 route
-# app = webapp2.Route('/<id:\d+>', ViewPostHandler)
 
 app = webapp2.WSGIApplication([
     ('/', Index),
     ('/newpost', NewPost),
-    ('/view', ViewPost)
+    ('/view', ViewPostHandler),
+    webapp2.Route('/<id:\d+>', ViewPostHandler)
 ], debug=True)
